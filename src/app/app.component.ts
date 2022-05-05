@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Book } from 'src/shared/book';
+import { Book } from './shared';
 
 type ViewState = 'list' | 'details';
 
