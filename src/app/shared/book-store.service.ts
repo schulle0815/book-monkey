@@ -1,7 +1,11 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/internal/Observable';
+import { catchError, map, retry } from 'rxjs/operators';
 import { Book } from './book/book';
+import { BookRaw } from './book/book-raw';
+import { BookFactory } from './book/book-factory';
+import { throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -12,15 +16,28 @@ export class BookStoreService {
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<Book[]> {
-    return this.http.get<any>(`${this.api}/books`);
+    return this.http.get<BookRaw[]>(`${this.api}/books`).pipe(
+      retry(3),
+      map((books) => books.map((b) => BookFactory.fromRaw(b))),
+      catchError(this.errorHandler)
+    );
   }
 
   getSingle(isbn: string): Observable<Book> {
-    return this.http.get<any>(`${this.api}/book/${isbn}`);
+    return this.http.get<BookRaw>(`${this.api}/book/${isbn}`).pipe(
+      retry(3),
+      map((b) => BookFactory.fromRaw(b)),
+      catchError(this.errorHandler)
+    );
   }
 
   remove(isbn: string): Observable<any> {
     const requestUrl = `${this.api}/book/${isbn}`;
     return this.http.delete<any>(requestUrl, { responseType: undefined });
+  }
+
+  private errorHandler(error: HttpErrorResponse): Observable<any> {
+    console.error(`Error: ${error.message}`);
+    return throwError(error);
   }
 }
