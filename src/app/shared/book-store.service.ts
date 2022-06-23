@@ -18,15 +18,25 @@ export class BookStoreService {
   getAll(): Observable<Book[]> {
     return this.http.get<BookRaw[]>(`${this.api}/books`).pipe(
       retry(3),
-      map((books) => books.map((b) => BookFactory.fromRaw(b))),
+      map((booksRaw) => booksRaw.map((b) => BookFactory.fromRaw(b))),
       catchError(this.errorHandler)
     );
+  }
+
+  getAllSearch(searchTerm: string): Observable<Book[]> {
+    return this.http
+      .get<BookRaw[]>(`${this.api}/books/search/${searchTerm}`)
+      .pipe(
+        retry(3),
+        map((booksRaw) => booksRaw.map((b) => BookFactory.fromRaw(b))),
+        catchError(this.errorHandler)
+      );
   }
 
   getSingle(isbn: string): Observable<Book> {
     return this.http.get<BookRaw>(`${this.api}/book/${isbn}`).pipe(
       retry(3),
-      map((b) => BookFactory.fromRaw(b)),
+      map((bookRaw) => BookFactory.fromRaw(bookRaw)),
       catchError(this.errorHandler)
     );
   }
